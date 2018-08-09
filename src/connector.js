@@ -30,20 +30,30 @@ export default class Connector extends Component {
 
     componentWillMount() {
         const { mqttProps, mqtt } = this.props;
-
-        this.mqtt = (mqtt) ? mqtt : MQTT.connect(mqttProps);
-
+        
+        this.mqtt = this._makeConnection(mqttProps, mqtt);
+        
         this.mqtt.on('connect', this._makeStatusHandler('connected'));
         this.mqtt.on('reconnect', this._makeStatusHandler('reconnect'));
         this.mqtt.on('close',  this._makeStatusHandler('closed'));
         this.mqtt.on('offline', this._makeStatusHandler('offline'));
         this.mqtt.on('error', console.error);
-
-
     }
 
     componentWillUnmount(){
         this.mqtt.end();
+    }
+
+    _makeConnection = (props, mqtt) => {
+        if (typeof props === 'object') {
+            const host = props.host;
+            delete props.host;
+            const options = props;
+            
+            return (mqtt) ? mqtt : MQTT.connect(host, options);
+        }
+
+        return (mqtt) ? mqtt : MQTT.connect(props);
     }
 
     _makeStatusHandler = (status) => {
